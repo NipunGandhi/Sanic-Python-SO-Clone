@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 sanic = "*"
+beanie = "==1.19.2"
 
 [dev-packages]
 
