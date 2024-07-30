@@ -3,6 +3,7 @@ from sanic.response import json
 import logging
 from sanic.exceptions import NotFound
 
+from db import init_db
 from routes.users import users_bp
 from routes.articles import articles_bp
 from routes.answers import answers_bp
@@ -15,6 +16,11 @@ app = Sanic("MySanicApp")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+@app.before_server_start
+async def setup_database(app, loop):
+    await init_db()
 
 
 @app.middleware('request')
