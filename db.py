@@ -4,9 +4,9 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 
 class User(Document):
+    uid: str
     username: str
     email: str
-    password_hash: str
     display_name: Optional[str] = None
     profile_picture_url: Optional[str] = None
     reputation: Optional[int] = 0
@@ -29,7 +29,6 @@ class Question(Document):
 
     class Settings:
         collection = "questions"
-
 
 
 class Answer(Document):
@@ -70,16 +69,20 @@ class Article(Document):
         collection = "articles"
 
 
+document_models = [User, Question, Answer, Comment, Article,]
+
+
 async def init_db():
     uri = "mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.2.12"
 
     client = AsyncIOMotorClient(uri)
     database = client['temp']
 
-    await init_beanie(database, document_models=[User, Question, Answer, Comment, Article])
+    await init_beanie(database, document_models=document_models)
 
     try:
-        # client.admin.command('ping')
+        client.admin.command('ping')
         print("Successfully connected to MongoDB!")
+
     except Exception as e:
         print(e)
