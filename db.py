@@ -32,6 +32,7 @@ class Question(Document):
 
 
 class Answer(Document):
+    answer_id: str
     question_id: str
     user_id: str
     body: str
@@ -56,6 +57,7 @@ class Comment(Document):
 
 
 class Article(Document):
+    article_id: str
     title: str
     body: str
     user_id: str
