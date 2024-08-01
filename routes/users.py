@@ -1,9 +1,9 @@
+from beanie import Document
 from sanic import Blueprint, response
 from sanic.response import json
 from sanic.request import Request
 from utils.sequence import get_next_sequence_value
-from utils.db import User
-
+from models.user_model import User
 users_bp = Blueprint('users')
 
 
@@ -46,9 +46,10 @@ async def create_user(request: Request):
 
         # TODO: Check difference of insert and save [Time complexity mainly]
         await user.insert()
+        user.uid = ""
 
         # TODO: Check how can I return map instead of this user model
-        return response.json({"message": "User created successfully", "status": "success", "user": "user"}, )
+        return response.json({"message": "User created successfully", "status": "success", "user": user}, )
 
     except Exception as e:
         return response.json({"message": str(e), "status": "error"}, status=500)
@@ -94,9 +95,3 @@ async def delete_user(request: Request, user_id: str):
 
     except Exception as e:
         return response.json({"message": str(e), "status": "error"}, status=500)
-
-
-@users_bp.route("/search", methods=["GET"])
-async def search_users(request: Request):
-    query = request.args.get("query", "")
-    return json({"message": "Search users", "query": query, "results": []})

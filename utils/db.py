@@ -1,19 +1,7 @@
 from beanie import init_beanie, Document
 from typing import List, Optional
 from motor.motor_asyncio import AsyncIOMotorClient
-
-
-class User(Document):
-    uid: str
-    username: str
-    email: str
-    display_name: Optional[str] = None
-    profile_picture_url: Optional[str] = None
-    reputation: Optional[int] = 0
-    bio: Optional[str] = None
-
-    class Settings:
-        collection = "users"
+from models.user_model import User
 
 
 class Sequence(Document):

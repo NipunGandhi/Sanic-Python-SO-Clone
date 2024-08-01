@@ -1,4 +1,4 @@
-from db import Sequence
+from utils.db import Sequence
 
 
 async def get_next_sequence_value(sequence_name: str) -> str:
