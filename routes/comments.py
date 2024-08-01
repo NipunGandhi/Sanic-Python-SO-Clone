@@ -1,7 +1,7 @@
 from sanic import Blueprint, response
 from sanic.request import Request
 from beanie import PydanticObjectId
-from db import Comment
+from utils.db import Comment
 comments_bp = Blueprint('comments')
 
 

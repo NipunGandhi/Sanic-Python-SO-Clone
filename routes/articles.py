@@ -1,6 +1,6 @@
 from sanic import Blueprint, response
 from sanic.request import Request
-from db import Article
+from utils.db import Article
 
 articles_bp = Blueprint('articles')
 

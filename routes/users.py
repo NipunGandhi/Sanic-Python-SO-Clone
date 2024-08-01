@@ -1,8 +1,8 @@
 from sanic import Blueprint, response
 from sanic.response import json
 from sanic.request import Request
-
-from db import User
+from utils.sequence import get_next_sequence_value
+from utils.db import User
 
 users_bp = Blueprint('users')
 
@@ -35,12 +35,11 @@ async def create_user(request: Request):
     try:
         data = request.json
 
-        # TODO: Auto generate UID. //U001, U002, U003 etc
-        uid = data.get('uid')
+        uid = await get_next_sequence_value("user_uid")
         username = data.get('username')
         email = data.get('email')
 
-        if not (uid and username and email):
+        if not (username and email):
             return response.json({"message": "Missing required fields", "status": "error"}, status=400)
 
         user = User(uid=uid, username=username, email=email)

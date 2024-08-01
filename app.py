@@ -3,7 +3,7 @@ from sanic.response import json
 import logging
 from sanic.exceptions import NotFound
 
-from db import init_db
+from utils.db import init_db
 from routes.users import users_bp
 from routes.articles import articles_bp
 from routes.answers import answers_bp

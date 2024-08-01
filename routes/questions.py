@@ -1,9 +1,8 @@
 from sanic import Blueprint, response
 from sanic.request import Request
-from beanie import Document
 from typing import List, Optional
 from pydantic import BaseModel
-from db import Question
+from utils.db import Question
 questions_bp = Blueprint('questions')
 
 

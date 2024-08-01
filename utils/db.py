@@ -16,6 +16,14 @@ class User(Document):
         collection = "users"
 
 
+class Sequence(Document):
+    name: str
+    sequence_value: int
+
+    class Settings:
+        collection = "sequences"
+
+
 class Question(Document):
     title: str
     body: str
@@ -71,7 +79,7 @@ class Article(Document):
         collection = "articles"
 
 
-document_models = [User, Question, Answer, Comment, Article,]
+document_models = [User, Question, Answer, Comment, Article, Sequence]
 
 
 async def init_db():
