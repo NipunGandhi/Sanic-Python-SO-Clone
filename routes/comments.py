@@ -1,8 +1,12 @@
 from sanic import Blueprint, response
 from sanic.request import Request
-from beanie import PydanticObjectId
+
+from models.article_model import Article
 from models.comment_model import Comment, comment_to_dict
 from datetime import datetime
+
+from models.user_model import User
+from utils.sequence import get_next_sequence_value
 
 comments_bp = Blueprint('comments')
 
@@ -42,14 +46,23 @@ async def get_comment(request: Request, comment_id: str):
 async def create_comment(request: Request):
     try:
         data = request.json
+        if data.get('article_id') is None or data.get('user_id') is None:
+            raise Exception("Article ID is missing or User ID")
+
+        article = await Article.find_one(Article.article_id == data.get('article_id'))
+        user = await User.find_one(User.uid == data.get('user_id'))
+
+        if article is None or user is None:
+            raise Exception("Incorrect article ID or User ID")
+
+        comment_id = await get_next_sequence_value('comment_id', 'CID')
 
         comment = Comment(
-            comment_id=data.get('comment_id'),
+            comment_id=comment_id,
             user_id=data.get('user_id'),
-            post_id=data.get('post_id'),
+            article_id=data.get('article_id'),
             body=data.get('body'),
             created_at=datetime.utcnow().isoformat() + 'Z',
-            updated_at=data.get('updated_at')
         )
 
         await comment.insert()
