@@ -1,6 +1,9 @@
 from sanic import Blueprint, response
 from sanic.request import Request
-from utils.db import Article
+from utils.db import User
+from models.article_model import Article, article_to_dict
+from utils.sequence import get_next_sequence_value
+from datetime import datetime
 
 articles_bp = Blueprint('articles')
 
@@ -9,9 +12,10 @@ articles_bp = Blueprint('articles')
 async def get_articles(request: Request):
     try:
         articles = await Article.find_all().to_list()
+        articles_dict = [article_to_dict(article) for article in articles]
         return response.json({
             "message": "List of articles",
-            "articles": [article.to_dict() for article in articles]
+            "articles": articles_dict
         })
     except Exception as e:
         return response.json({"error": str(e)}, status=500)
@@ -21,14 +25,14 @@ async def get_articles(request: Request):
 async def get_article(request: Request, article_id: str):
     try:
         article = await Article.find_one(Article.article_id == article_id)
-
         if article is None:
             return response.json({"message": "Article not found", "status": "error"}, status=404)
 
+        article_dict = article_to_dict(article)
         return response.json({
             "message": "Article details",
             "article_id": article_id,
-            "article": article.to_dict()
+            "article": article_dict
         })
     except Exception as e:
         return response.json({"error": str(e)}, status=500)
@@ -38,8 +42,12 @@ async def get_article(request: Request, article_id: str):
 async def create_article(request: Request):
     try:
         data = request.json
+        user = await User.find_one(User.uid == data.get('user_id'))
 
-        article_id = data.get('article_id')
+        if user is None:
+            raise Exception("Invalid UID")
+
+        article_id = await get_next_sequence_value(sequence_name="article_id", suffix="AID")
 
         article = Article(
             article_id=article_id,
@@ -47,18 +55,16 @@ async def create_article(request: Request):
             body=data.get('body'),
             user_id=data.get('user_id'),
             tags=data.get('tags', []),
-            score=data.get('score', 0),
-            views=data.get('views', 0),
-            created_at=data.get('created_at'),
-            updated_at=data.get('updated_at')
+            created_at=datetime.utcnow().isoformat() + 'Z',
         )
 
         await article.insert()
 
+        article_dict = article_to_dict(article)
         return response.json({
             "message": "Article created successfully",
             "status": "success",
-            "article": article.to_dict()
+            "article": article_dict
         })
     except Exception as e:
         return response.json({"error": str(e)}, status=500)
@@ -68,7 +74,6 @@ async def create_article(request: Request):
 async def update_article(request: Request, article_id: str):
     try:
         data = request.json
-
         article = await Article.find_one(Article.article_id == article_id)
 
         if article is None:
@@ -83,10 +88,11 @@ async def update_article(request: Request, article_id: str):
 
         await article.save()
 
+        article_dict = article_to_dict(article)
         return response.json({
             "message": "Article updated successfully",
             "status": "success",
-            "article": article.to_dict()
+            "article": article_dict
         })
     except Exception as e:
         return response.json({"error": str(e)}, status=500)
@@ -113,7 +119,7 @@ async def delete_article(request: Request, article_id: str):
 @articles_bp.route("/search", methods=["GET"])
 async def search_articles(request: Request):
     try:
-       pass
+        pass
     except Exception as e:
         return response.json({"error": str(e)}, status=500)
 

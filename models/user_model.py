@@ -13,3 +13,15 @@ class User(Document):
 
     class Settings:
         collection = "users"
+
+
+def user_to_dict(user: User) -> dict:
+    return {
+        "uid": user.uid,
+        "username": user.username,
+        "email": user.email,
+        "display_name": user.display_name,
+        "profile_picture_url": user.profile_picture_url,
+        "reputation": user.reputation,
+        "bio": user.bio,
+    }

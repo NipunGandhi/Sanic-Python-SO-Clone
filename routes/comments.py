@@ -1,18 +1,21 @@
 from sanic import Blueprint, response
 from sanic.request import Request
 from beanie import PydanticObjectId
-from utils.db import Comment
+from models.comment_model import Comment, comment_to_dict
+from datetime import datetime
+
 comments_bp = Blueprint('comments')
 
 
 @comments_bp.route("/", methods=["GET"])
 async def get_comments(request: Request):
     try:
+        comments = Comment.find_all()
 
-        comments = await Comment.find_all().to_list()
+        comments_dict = [comment_to_dict(comment) for comment in comments]
         return response.json({
             "message": "List of comments",
-            "comments": [comment.to_mongo().to_dict() for comment in comments]
+            "comments": comments_dict
         })
     except Exception as e:
         return response.json({"error": str(e)}, status=500)
@@ -21,9 +24,7 @@ async def get_comments(request: Request):
 @comments_bp.route("/<comment_id>", methods=["GET"])
 async def get_comment(request: Request, comment_id: str):
     try:
-
-        comment_id = PydanticObjectId(comment_id)
-        comment = await Comment.get(comment_id)
+        comment = await Comment.find_one(Comment.comment_id == comment_id)
 
         if comment is None:
             return response.json({"message": "Comment not found", "status": "error"}, status=404)
@@ -31,7 +32,7 @@ async def get_comment(request: Request, comment_id: str):
         return response.json({
             "message": "Comment details",
             "comment_id": comment_id,
-            "comment": comment.to_mongo().to_dict()
+            "comment": comment_to_dict(comment)
         })
     except Exception as e:
         return response.json({"error": str(e)}, status=500)
@@ -43,20 +44,20 @@ async def create_comment(request: Request):
         data = request.json
 
         comment = Comment(
+            comment_id=data.get('comment_id'),
             user_id=data.get('user_id'),
             post_id=data.get('post_id'),
             body=data.get('body'),
-            created_at=data.get('created_at'),
+            created_at=datetime.utcnow().isoformat() + 'Z',
             updated_at=data.get('updated_at')
         )
 
-        # Insert the comment into the database
         await comment.insert()
 
         return response.json({
             "message": "Comment created successfully",
             "status": "success",
-            "comment": comment.to_mongo().to_dict()
+            "comment": comment_to_dict(comment)
         })
     except Exception as e:
         return response.json({"error": str(e)}, status=500)
@@ -66,25 +67,26 @@ async def create_comment(request: Request):
 async def update_comment(request: Request, comment_id: str):
     try:
         data = request.json
-        comment_id = PydanticObjectId(comment_id)
 
-        comment = await Comment.get(comment_id)
+        comment = await Comment.find_one(Comment.comment_id == comment_id)
 
         if comment is None:
             return response.json({"message": "Comment not found", "status": "error"}, status=404)
 
-        await comment.update({
-            "$set": {
-                "body": data.get('body', comment.body),
-                "updated_at": data.get('updated_at', comment.updated_at)
-            }
-        })
+        update_fields = {
+            "body": data.get('body', comment.body),
+            "updated_at": datetime.utcnow().isoformat() + 'Z',
+            "article_comment": data.get('article_comment', comment.article_comment),
+            "question_comment": data.get('question_comment', comment.question_comment)
+        }
+
+        await comment.update({"$set": {k: v for k, v in update_fields.items() if v is not None}})
 
         updated_comment = await Comment.get(comment_id)
         return response.json({
             "message": "Comment updated successfully",
             "status": "success",
-            "comment": updated_comment.to_mongo().to_dict()
+            "comment": comment_to_dict(updated_comment)
         })
     except Exception as e:
         return response.json({"error": str(e)}, status=500)
@@ -93,13 +95,11 @@ async def update_comment(request: Request, comment_id: str):
 @comments_bp.route("/<comment_id>", methods=["DELETE"])
 async def delete_comment(request: Request, comment_id: str):
     try:
-        comment_id = PydanticObjectId(comment_id)
-        comment = await Comment.get(comment_id)
+        comment = await Comment.find_one(Comment.comment_id == comment_id)
 
         if comment is None:
             return response.json({"message": "Comment not found", "status": "error"}, status=404)
 
-        # Delete the comment
         await comment.delete()
 
         return response.json({

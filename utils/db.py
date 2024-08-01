@@ -1,6 +1,7 @@
 from beanie import init_beanie, Document
 from typing import List, Optional
 from motor.motor_asyncio import AsyncIOMotorClient
+from models.article_model import Article
 from models.user_model import User
 
 
@@ -42,29 +43,17 @@ class Answer(Document):
 
 
 class Comment(Document):
+    comment_id: str
     user_id: str
     post_id: str
+    article_comment: bool
+    question_comment: bool
     body: str
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
 
     class Settings:
         collection = "comments"
-
-
-class Article(Document):
-    article_id: str
-    title: str
-    body: str
-    user_id: str
-    tags: List[str] = []
-    score: Optional[int] = 0
-    views: Optional[int] = 0
-    created_at: Optional[str] = None
-    updated_at: Optional[str] = None
-
-    class Settings:
-        collection = "articles"
 
 
 document_models = [User, Question, Answer, Comment, Article, Sequence]
