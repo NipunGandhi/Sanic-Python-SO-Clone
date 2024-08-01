@@ -49,13 +49,13 @@ async def create_user(request: Request):
         await user.insert()
 
         # TODO: Check how can I return map instead of this user model
-        return response.json({"message": "User created successfully", "status": "success", "user": user}, )
+        return response.json({"message": "User created successfully", "status": "success", "user": "user"}, )
 
     except Exception as e:
         return response.json({"message": str(e), "status": "error"}, status=500)
 
 
-@users_bp.route("/<user_id>", methods=["PUT"])
+@users_bp.route("/<user_id>", methods=["PATCH"])
 async def update_user(request: Request, user_id: str):
     try:
         data = request.json
@@ -75,7 +75,7 @@ async def update_user(request: Request, user_id: str):
 
         await user.update({"$set": user_updates})
 
-        return response.json({"message": "User updated successfully", "status": "success", "user": user})
+        return response.json({"message": "User updated successfully", "status": "success", "user": "user"}, status=200)
 
     except Exception as e:
         return response.json({"message": str(e), "status": "error"}, status=500)
@@ -83,17 +83,18 @@ async def update_user(request: Request, user_id: str):
 
 @users_bp.route("/<user_id>", methods=["DELETE"])
 async def delete_user(request: Request, user_id: str):
-    return json({"message": "Delete user", "user_id": user_id, "status": "success"})
+    try:
+        user = await User.find_one(User.uid == user_id)
 
+        if user is None:
+            return response.json({"message": "User not found", "status": "error"}, status=404)
 
-@users_bp.route("/<user_id>/reputation", methods=["PATCH"])
-async def update_reputation(request: Request, user_id: str):
-    return json({"message": "Update user reputation", "user_id": user_id, "new_reputation": request.json})
+        await user.delete()
 
+        return response.json({"message": "User deleted successfully", "status": "success"}, status=200)
 
-@users_bp.route("/<user_id>/profile", methods=["PATCH"])
-async def update_profile(request: Request, user_id: str):
-    return json({"message": "Update user profile", "user_id": user_id, "profile_data": request.json})
+    except Exception as e:
+        return response.json({"message": str(e), "status": "error"}, status=500)
 
 
 @users_bp.route("/search", methods=["GET"])
